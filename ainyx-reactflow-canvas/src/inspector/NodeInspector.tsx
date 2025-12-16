@@ -12,6 +12,11 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import type { Node } from "@xyflow/react";
 import type { ServiceNodeData } from "@/types/node";
+import type { InspectorTab } from "@/store/uiStore";
+
+function isInspectorTab(value: string): value is InspectorTab {
+  return value === "config" || value === "runtime";
+}
 
 interface Props {
   node: Node<ServiceNodeData>;
@@ -42,7 +47,14 @@ export function NodeInspector({ node, onUpdate }: Props) {
         <Badge variant={statusColor}>{status}</Badge>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setTab(v)}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          if (isInspectorTab(v)) {
+            setTab(v);
+          }
+        }}
+      >
         <TabsList className="grid grid-cols-2">
           <TabsTrigger value="config">Config</TabsTrigger>
           <TabsTrigger value="runtime">Runtime</TabsTrigger>
@@ -52,7 +64,7 @@ export function NodeInspector({ node, onUpdate }: Props) {
           <Input
             value={label}
             placeholder="Service name"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange={(e) =>
               onUpdate({ label: e.target.value })
             }
           />
@@ -60,7 +72,7 @@ export function NodeInspector({ node, onUpdate }: Props) {
           <Textarea
             placeholder="Description"
             value={description ?? ""}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            onChange={(e) =>
               onUpdate({ description: e.target.value })
             }
           />
@@ -83,7 +95,7 @@ export function NodeInspector({ node, onUpdate }: Props) {
                 value={load}
                 min={0}
                 max={100}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onChange={(e) =>
                   onUpdate({ load: Number(e.target.value) })
                 }
                 className="w-20"

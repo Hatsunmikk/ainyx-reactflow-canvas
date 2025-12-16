@@ -14,7 +14,6 @@ import { useGraph } from "@/hooks/useGraph";
 import { NodeInspector } from "@/inspector/NodeInspector";
 import type { ServiceNodeData } from "@/types/node";
 
-
 export function FlowCanvas() {
   const selectedAppId = useUIStore((s) => s.selectedAppId);
   const selectedNodeId = useUIStore((s) => s.selectedNodeId);
@@ -22,19 +21,45 @@ export function FlowCanvas() {
 
   const { data, isLoading, isError } = useGraph(selectedAppId);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<ServiceNodeData>>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  // ✅ Typed ReactFlow state
+  const [nodes, setNodes, onNodesChange] =
+    useNodesState<Node<ServiceNodeData>>([]);
+  const [edges, setEdges, onEdgesChange] =
+    useEdgesState<Edge>([]);
 
+  // ✅ Normalize incoming graph data (VERY important)
   useEffect(() => {
-    if (data) {
-      setNodes(data.nodes);
-      setEdges(data.edges);
-    }
-  }, [data, setNodes, setEdges]);
+  if (!data) return;
+
+  const typedNodes: Node<ServiceNodeData>[] = data.nodes.map((n) => {
+    const raw = n.data as Partial<ServiceNodeData>;
+
+    return {
+      ...n,
+      data: {
+        label: typeof raw.label === "string" ? raw.label : "Service",
+        description:
+          typeof raw.description === "string" ? raw.description : "",
+        status:
+          raw.status === "Healthy" ||
+          raw.status === "Degraded" ||
+          raw.status === "Down"
+            ? raw.status
+            : "Healthy",
+        load: typeof raw.load === "number" ? raw.load : 0,
+      },
+    };
+  });
+
+  setNodes(typedNodes);
+  setEdges(data.edges);
+}, [data, setNodes, setEdges]);
+
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
-  const updateNodeData = (patch: Partial<Node["data"]>) => {
+  // ✅ Inspector → canvas data updates
+  const updateNodeData = (patch: Partial<ServiceNodeData>) => {
     if (!selectedNodeId) return;
 
     setNodes((nds) =>
@@ -47,7 +72,7 @@ export function FlowCanvas() {
   };
 
   const onNodeClick = useCallback(
-    (_: unknown, node: Node) => {
+    (_: unknown, node: Node<ServiceNodeData>) => {
       setSelectedNode(node.id);
     },
     [setSelectedNode]

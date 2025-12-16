@@ -1,15 +1,16 @@
 import { create } from "zustand";
+export type InspectorTab = "config" | "runtime";
 
 interface UIState {
   selectedAppId: string | null;
   selectedNodeId: string | null;
   isMobilePanelOpen: boolean;
-  activeInspectorTab: "config" | "runtime";
+  activeInspectorTab: InspectorTab;
 
   setSelectedApp: (id: string | null) => void;
   setSelectedNode: (id: string | null) => void;
   setMobilePanelOpen: (open: boolean) => void;
-  setInspectorTab: (tab: "config" | "runtime") => void;
+  setInspectorTab: (tab: InspectorTab) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
