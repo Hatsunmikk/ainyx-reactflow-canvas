@@ -12,6 +12,8 @@ import type { Node, Edge } from "@xyflow/react";
 import { useUIStore } from "@/store/uiStore";
 import { useGraph } from "@/hooks/useGraph";
 import { NodeInspector } from "@/inspector/NodeInspector";
+import type { ServiceNodeData } from "@/types/node";
+
 
 export function FlowCanvas() {
   const selectedAppId = useUIStore((s) => s.selectedAppId);
@@ -20,7 +22,7 @@ export function FlowCanvas() {
 
   const { data, isLoading, isError } = useGraph(selectedAppId);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<ServiceNodeData>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
