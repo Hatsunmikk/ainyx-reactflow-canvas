@@ -19,6 +19,9 @@ export function FlowCanvas() {
   const selectedNodeId = useUIStore((s) => s.selectedNodeId);
   const setSelectedNode = useUIStore((s) => s.setSelectedNode);
 
+  const isMobilePanelOpen = useUIStore((s) => s.isMobilePanelOpen);
+  const setMobilePanelOpen = useUIStore((s) => s.setMobilePanelOpen);
+
   const { data, isLoading, isError } = useGraph(selectedAppId);
 
   const [nodes, setNodes, onNodesChange] =
@@ -26,7 +29,7 @@ export function FlowCanvas() {
   const [edges, setEdges, onEdgesChange] =
     useEdgesState<Edge>([]);
 
-  // ✅ Normalize incoming graph data
+  // Normalize incoming graph data
   useEffect(() => {
     if (!data) return;
 
@@ -56,7 +59,7 @@ export function FlowCanvas() {
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
-  // ✅ Inspector → canvas updates
+  // Inspector → canvas updates
   const updateNodeData = (patch: Partial<ServiceNodeData>) => {
     if (!selectedNodeId) return;
 
@@ -72,15 +75,21 @@ export function FlowCanvas() {
   const onNodeClick = useCallback(
     (_: unknown, node: Node<ServiceNodeData>) => {
       setSelectedNode(node.id);
+
+      // Open drawer on mobile
+      if (window.innerWidth < 768) {
+        setMobilePanelOpen(true);
+      }
     },
-    [setSelectedNode]
+    [setSelectedNode, setMobilePanelOpen]
   );
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
-  }, [setSelectedNode]);
+    setMobilePanelOpen(false);
+  }, [setSelectedNode, setMobilePanelOpen]);
 
-  // 🆕 DELETE / BACKSPACE SUPPORT
+  // Delete / Backspace
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (!selectedNodeId) return;
@@ -95,12 +104,13 @@ export function FlowCanvas() {
           )
         );
         setSelectedNode(null);
+        setMobilePanelOpen(false);
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedNodeId, setNodes, setEdges, setSelectedNode]);
+  }, [selectedNodeId, setNodes, setEdges, setSelectedNode, setMobilePanelOpen]);
 
   if (!selectedAppId) {
     return (
@@ -145,12 +155,29 @@ export function FlowCanvas() {
         <Controls />
       </ReactFlow>
 
+      {/* Desktop inspector */}
       {selectedNode && (
-        <div className="absolute right-0 top-0 h-full w-64 border-l bg-background">
+        <div className="hidden md:block absolute right-0 top-0 h-full w-64 border-l bg-background">
           <NodeInspector
             node={selectedNode}
             onUpdate={updateNodeData}
           />
+        </div>
+      )}
+
+      {/* Mobile drawer */}
+      {selectedNode && isMobilePanelOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setMobilePanelOpen(false)}
+          />
+          <div className="absolute right-0 top-0 h-full w-72 bg-background shadow-lg">
+            <NodeInspector
+              node={selectedNode}
+              onUpdate={updateNodeData}
+            />
+          </div>
         </div>
       )}
     </div>
