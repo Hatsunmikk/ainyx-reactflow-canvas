@@ -1,18 +1,21 @@
 import { useEffect, useCallback } from "react";
-import  { 
+import {
   ReactFlow,
   Background,
   Controls,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
 } from "@xyflow/react";
-import type {Node, Edge } from "@xyflow/react";
-import { BackgroundVariant } from "@xyflow/react";
+import type { Node, Edge } from "@xyflow/react";
+
 import { useUIStore } from "@/store/uiStore";
 import { useGraph } from "@/hooks/useGraph";
+import { NodeInspector } from "@/inspector/NodeInspector";
 
 export function FlowCanvas() {
   const selectedAppId = useUIStore((s) => s.selectedAppId);
+  const selectedNodeId = useUIStore((s) => s.selectedNodeId);
   const setSelectedNode = useUIStore((s) => s.setSelectedNode);
 
   const { data, isLoading, isError } = useGraph(selectedAppId);
@@ -20,13 +23,26 @@ export function FlowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-  // Sync fetched graph into ReactFlow state
   useEffect(() => {
     if (data) {
       setNodes(data.nodes);
       setEdges(data.edges);
     }
   }, [data, setNodes, setEdges]);
+
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+
+  const updateNodeData = (patch: Partial<Node["data"]>) => {
+    if (!selectedNodeId) return;
+
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === selectedNodeId
+          ? { ...n, data: { ...n.data, ...patch } }
+          : n
+      )
+    );
+  };
 
   const onNodeClick = useCallback(
     (_: unknown, node: Node) => {
@@ -64,20 +80,32 @@ export function FlowCanvas() {
   }
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onNodeClick={onNodeClick}
-      onPaneClick={onPaneClick}
-      fitView
-    >
-      <Background 
-      variant={BackgroundVariant.Dots} 
-      gap={16} 
-      size={1} />
-      <Controls />
-    </ReactFlow>
+    <div className="relative h-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        fitView
+      >
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={16}
+          size={1}
+        />
+        <Controls />
+      </ReactFlow>
+
+      {selectedNode && (
+        <div className="absolute right-0 top-0 h-full w-64 border-l bg-background">
+          <NodeInspector
+            node={selectedNode}
+            onUpdate={updateNodeData}
+          />
+        </div>
+      )}
+    </div>
   );
 }
