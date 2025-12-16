@@ -21,44 +21,42 @@ export function FlowCanvas() {
 
   const { data, isLoading, isError } = useGraph(selectedAppId);
 
-  // ✅ Typed ReactFlow state
   const [nodes, setNodes, onNodesChange] =
     useNodesState<Node<ServiceNodeData>>([]);
   const [edges, setEdges, onEdgesChange] =
     useEdgesState<Edge>([]);
 
-  // ✅ Normalize incoming graph data (VERY important)
+  // ✅ Normalize incoming graph data
   useEffect(() => {
-  if (!data) return;
+    if (!data) return;
 
-  const typedNodes: Node<ServiceNodeData>[] = data.nodes.map((n) => {
-    const raw = n.data as Partial<ServiceNodeData>;
+    const typedNodes: Node<ServiceNodeData>[] = data.nodes.map((n) => {
+      const raw = n.data as Partial<ServiceNodeData>;
 
-    return {
-      ...n,
-      data: {
-        label: typeof raw.label === "string" ? raw.label : "Service",
-        description:
-          typeof raw.description === "string" ? raw.description : "",
-        status:
-          raw.status === "Healthy" ||
-          raw.status === "Degraded" ||
-          raw.status === "Down"
-            ? raw.status
-            : "Healthy",
-        load: typeof raw.load === "number" ? raw.load : 0,
-      },
-    };
-  });
+      return {
+        ...n,
+        data: {
+          label: typeof raw.label === "string" ? raw.label : "Service",
+          description:
+            typeof raw.description === "string" ? raw.description : "",
+          status:
+            raw.status === "Healthy" ||
+            raw.status === "Degraded" ||
+            raw.status === "Down"
+              ? raw.status
+              : "Healthy",
+          load: typeof raw.load === "number" ? raw.load : 0,
+        },
+      };
+    });
 
-  setNodes(typedNodes);
-  setEdges(data.edges);
-}, [data, setNodes, setEdges]);
-
+    setNodes(typedNodes);
+    setEdges(data.edges);
+  }, [data, setNodes, setEdges]);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
-  // ✅ Inspector → canvas data updates
+  // ✅ Inspector → canvas updates
   const updateNodeData = (patch: Partial<ServiceNodeData>) => {
     if (!selectedNodeId) return;
 
@@ -81,6 +79,28 @@ export function FlowCanvas() {
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
   }, [setSelectedNode]);
+
+  // 🆕 DELETE / BACKSPACE SUPPORT
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!selectedNodeId) return;
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
+        setEdges((eds) =>
+          eds.filter(
+            (e) =>
+              e.source !== selectedNodeId &&
+              e.target !== selectedNodeId
+          )
+        );
+        setSelectedNode(null);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedNodeId, setNodes, setEdges, setSelectedNode]);
 
   if (!selectedAppId) {
     return (
