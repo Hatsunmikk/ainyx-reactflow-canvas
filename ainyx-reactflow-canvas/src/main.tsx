@@ -1,12 +1,17 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Providers } from "@/app/Providers";
 import './index.css'
 import App from './app/App.tsx'
 import "@xyflow/react/dist/style.css"
 
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  <React.StrictMode>
+    <Providers>
     <App />
-  </StrictMode>,
+    </Providers>
+  </React.StrictMode>,
 )
