@@ -18,9 +18,9 @@ export function FlowCanvas() {
   const selectedAppId = useUIStore((s) => s.selectedAppId);
   const selectedNodeId = useUIStore((s) => s.selectedNodeId);
   const setSelectedNode = useUIStore((s) => s.setSelectedNode);
+
   const nodeToAdd = useUIStore((s) => s.nodeToAdd);
   const clearNodeRequest = useUIStore((s) => s.clearNodeRequest);
-
 
   const isMobilePanelOpen = useUIStore((s) => s.isMobilePanelOpen);
   const setMobilePanelOpen = useUIStore((s) => s.setMobilePanelOpen);
@@ -32,7 +32,7 @@ export function FlowCanvas() {
   const [edges, setEdges, onEdgesChange] =
     useEdgesState<Edge>([]);
 
-  // ✅ Normalize incoming graph data (includes node.type + data.type)
+  // Normalize incoming graph data
   useEffect(() => {
     if (!data) return;
 
@@ -43,9 +43,9 @@ export function FlowCanvas() {
 
       return {
         ...n,
-        type: nodeType, // ReactFlow renderer
+        type: nodeType,
         data: {
-          type: nodeType, // domain data
+          type: nodeType,
           label: typeof raw.label === "string" ? raw.label : "Service",
           description:
             typeof raw.description === "string" ? raw.description : "",
@@ -79,45 +79,46 @@ export function FlowCanvas() {
     );
   };
 
+  // Add node helper
   const addNode = useCallback(
     (type: "service" | "database") => {
-  const id = crypto.randomUUID();
+      const id = crypto.randomUUID();
 
-  setNodes((nds) => [
-    ...nds,
-    {
-      id,
-      type, // ReactFlow renderer
-      position: {
-        x: 200 + Math.random() * 120,
-        y: 200 + Math.random() * 120,
-      },
-      data: {
-        type,
-        label: type === "service" ? "New Service" : "New Database",
-        description: "",
-        status: "Healthy",
-        load: 0,
-      },
+      setNodes((nds) => [
+        ...nds,
+        {
+          id,
+          type,
+          position: {
+            x: 200 + Math.random() * 120,
+            y: 200 + Math.random() * 120,
+          },
+          data: {
+            type,
+            label: type === "service" ? "New Service" : "New Database",
+            description: "",
+            status: "Healthy",
+            load: 0,
+          },
+        },
+      ]);
+
+      setSelectedNode(id);
     },
-  ]);
-},
-[setNodes]
+    [setNodes, setSelectedNode]
   );
 
+  // Handle Add Node command from TopBar
   useEffect(() => {
-  if (!nodeToAdd) return;
+    if (!nodeToAdd) return;
 
-  addNode(nodeToAdd);
-  clearNodeRequest();
-}, [nodeToAdd, addNode, clearNodeRequest]);
-
+    addNode(nodeToAdd);
+    clearNodeRequest();
+  }, [nodeToAdd, addNode, clearNodeRequest]);
 
   const onNodeClick = useCallback(
     (_: unknown, node: Node<ServiceNodeData>) => {
       setSelectedNode(node.id);
-
-      // Open drawer on mobile
       if (window.innerWidth < 768) {
         setMobilePanelOpen(true);
       }
@@ -130,7 +131,7 @@ export function FlowCanvas() {
     setMobilePanelOpen(false);
   }, [setSelectedNode, setMobilePanelOpen]);
 
-  // Delete / Backspace support
+  // Delete / Backspace
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (!selectedNodeId) return;
@@ -152,6 +153,37 @@ export function FlowCanvas() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedNodeId, setNodes, setEdges, setSelectedNode, setMobilePanelOpen]);
+
+  // 🔑 Keyboard shortcuts: S / D / F
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === "s") {
+        addNode("service");
+      }
+
+      if (e.key.toLowerCase() === "d") {
+        addNode("database");
+      }
+
+      if (e.key.toLowerCase() === "f") {
+        document
+          .querySelector<HTMLButtonElement>(
+            '[aria-label="fit view"]'
+          )
+          ?.click();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [addNode]);
 
   if (!selectedAppId) {
     return (
