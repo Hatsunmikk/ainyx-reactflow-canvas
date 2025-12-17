@@ -19,7 +19,7 @@ import type { ServiceNodeData } from "@/types/node";
 import { ServiceNode } from "@/nodes/ServiceNode";
 import { DatabaseNode } from "@/nodes/DatabaseNode";
 import { KeyboardHints } from "./KeyboardHints";
-import { Key } from "lucide-react";
+
 
 export function FlowCanvas() {
   const selectedAppId = useUIStore((s) => s.selectedAppId);
