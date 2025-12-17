@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Share2, Moon } from "lucide-react";
+import { Share2, Moon, Plus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function TopBar() {
   return (
@@ -10,9 +16,24 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="outline">
+              <Plus className="mr-1 h-4 w-4" />
+              Add Node
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>Service</DropdownMenuItem>
+            <DropdownMenuItem>Database</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button size="icon" variant="ghost">
           <Share2 className="h-4 w-4" />
         </Button>
+
         <Button size="icon" variant="ghost">
           <Moon className="h-4 w-4" />
         </Button>
