@@ -18,6 +18,9 @@ export function FlowCanvas() {
   const selectedAppId = useUIStore((s) => s.selectedAppId);
   const selectedNodeId = useUIStore((s) => s.selectedNodeId);
   const setSelectedNode = useUIStore((s) => s.setSelectedNode);
+  const nodeToAdd = useUIStore((s) => s.nodeToAdd);
+  const clearNodeRequest = useUIStore((s) => s.clearNodeRequest);
+
 
   const isMobilePanelOpen = useUIStore((s) => s.isMobilePanelOpen);
   const setMobilePanelOpen = useUIStore((s) => s.setMobilePanelOpen);
@@ -76,7 +79,8 @@ export function FlowCanvas() {
     );
   };
 
-  const addNode = (type: "service" | "database") => {
+  const addNode = useCallback(
+    (type: "service" | "database") => {
   const id = crypto.randomUUID();
 
   setNodes((nds) => [
@@ -97,7 +101,16 @@ export function FlowCanvas() {
       },
     },
   ]);
-};
+},
+[setNodes]
+  );
+
+  useEffect(() => {
+  if (!nodeToAdd) return;
+
+  addNode(nodeToAdd);
+  clearNodeRequest();
+}, [nodeToAdd, addNode, clearNodeRequest]);
 
 
   const onNodeClick = useCallback(

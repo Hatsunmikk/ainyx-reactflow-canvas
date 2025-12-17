@@ -6,8 +6,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useUIStore } from "@/store/uiStore";
 
 export function TopBar() {
+  const requestAddNode = useUIStore((s) => s.requestAddNode);
+
   return (
     <header className="flex h-12 items-center justify-between border-b bg-background px-4">
       <div className="flex items-center gap-2 text-sm font-semibold">
@@ -25,8 +28,12 @@ export function TopBar() {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Service</DropdownMenuItem>
-            <DropdownMenuItem>Database</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => requestAddNode("service")}>
+              Service
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => requestAddNode("database")}>
+              Database
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
