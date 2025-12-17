@@ -41,7 +41,8 @@ export function TopBar() {
           <Share2 className="h-4 w-4" />
         </Button>
 
-        <Button size="icon" variant="ghost">
+        <Button size="icon" variant="ghost"
+        onClick={() => (window as any).__toggleTheme?.()}>
           <Moon className="h-4 w-4" />
         </Button>
       </div>

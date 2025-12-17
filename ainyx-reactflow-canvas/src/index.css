@@ -123,3 +123,47 @@
     @apply bg-background text-foreground;
   }
 }
+
+.react-flow__edge-hover:hover path {
+  stroke: hsl(var(--foreground));
+  stroke-width: 2;
+}
+
+.react-flow__edge-path {
+  transition: stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+/* ------------------------------ */
+/* React Flow – Dark mode fixes   */
+/* ------------------------------ */
+
+.dark .react-flow__controls {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.15);
+}
+
+.dark .react-flow__controls-button {
+  background: transparent;
+  color: hsl(var(--foreground));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.dark .react-flow__controls-button:hover {
+  background: hsl(var(--accent));
+}
+
+/* React Flow background dots */
+
+.react-flow__background {
+  background-color: hsl(var(--background));
+}
+
+.react-flow__background pattern circle {
+  fill: hsl(var(--muted-foreground));
+  opacity: 0.35;
+}
+
+.dark .react-flow__background pattern circle {
+  opacity: 0.25;
+}

@@ -9,15 +9,16 @@ export function DatabaseNode(props: NodeProps) {
   return (
     <div
       className={[
-        "min-w-40 rounded-full border bg-muted px-4 py-3 shadow-sm",
+        "min-w-40 rounded-xl border bg-muted px-4 py-3",
+        "shadow-sm transition-shadow",
         selected
-          ? "border-purple-500 ring-1 ring-purple-500"
+          ? "border-purple-500 shadow-md ring-1 ring-purple-500/40"
           : "border-border",
       ].join(" ")}
     >
       <div className="flex items-center gap-2">
-        <Database className="h-4 w-4 text-purple-500" />
-        <div className="truncate text-sm font-medium">
+        <Database className="h-4 w-4 text-purple-500 shrink-0" />
+        <div className="truncate text-sm font-medium leading-tight">
           {data.label}
         </div>
       </div>

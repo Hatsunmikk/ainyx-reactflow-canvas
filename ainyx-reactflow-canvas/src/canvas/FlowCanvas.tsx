@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -6,6 +6,8 @@ import {
   BackgroundVariant,
   useNodesState,
   useEdgesState,
+  MarkerType,
+  ConnectionLineType,
 } from "@xyflow/react";
 import type { Node, Edge } from "@xyflow/react";
 
@@ -16,7 +18,8 @@ import type { ServiceNodeData } from "@/types/node";
 
 import { ServiceNode } from "@/nodes/ServiceNode";
 import { DatabaseNode } from "@/nodes/DatabaseNode";
-import type { NodeTypes } from "@xyflow/react";
+import { KeyboardHints } from "./KeyboardHints";
+import { Key } from "lucide-react";
 
 export function FlowCanvas() {
   const selectedAppId = useUIStore((s) => s.selectedAppId);
@@ -36,13 +39,38 @@ export function FlowCanvas() {
   const [edges, setEdges, onEdgesChange] =
     useEdgesState<Edge>([]);
 
-  // ✅ REGISTER NODE TYPES (MUST BE HERE)
-  const nodeTypes: NodeTypes = {
-    service: ServiceNode,
-    database: DatabaseNode,
-  };
+  /* -------------------------------------------------- */
+  /* Node + Edge config                                 */
+  /* -------------------------------------------------- */
 
-  // Normalize incoming graph data
+  const nodeTypes = useMemo(
+    () => ({
+      service: ServiceNode,
+      database: DatabaseNode,
+    }),
+    []
+  );
+
+  const defaultEdgeOptions = useMemo(
+    () => ({
+      type: "smoothstep",
+      markerEnd: { 
+        type: MarkerType.ArrowClosed ,
+        width: 14,
+        height: 14,
+      },
+      style: {
+        strokeWidth: 1.75,
+        stroke: "hsl(var(--muted-foreground))",
+      },
+    }),
+    []
+  );
+
+  /* -------------------------------------------------- */
+  /* Normalize backend graph                            */
+  /* -------------------------------------------------- */
+
   useEffect(() => {
     if (!data) return;
 
@@ -71,12 +99,25 @@ export function FlowCanvas() {
     });
 
     setNodes(typedNodes);
-    setEdges(data.edges);
+
+    setEdges(
+      data.edges.map((e) => ({
+        ...e,
+        style: {
+          strokeWidth: 1.75,
+          stroke: "hsl(var(--muted-foreground))",
+        },
+        className: "transition-[stroke,stroke-width] duration-150 hover:stroke-foreground hover:stroke-[2.5]"
+      }))
+    );
   }, [data, setNodes, setEdges]);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
-  // Inspector → canvas updates
+  /* -------------------------------------------------- */
+  /* Inspector updates                                  */
+  /* -------------------------------------------------- */
+
   const updateNodeData = (patch: Partial<ServiceNodeData>) => {
     if (!selectedNodeId) return;
 
@@ -89,7 +130,10 @@ export function FlowCanvas() {
     );
   };
 
-  // Add node helper
+  /* -------------------------------------------------- */
+  /* Add node                                           */
+  /* -------------------------------------------------- */
+
   const addNode = useCallback(
     (type: "service" | "database") => {
       const id = crypto.randomUUID();
@@ -118,12 +162,15 @@ export function FlowCanvas() {
     [setNodes, setSelectedNode]
   );
 
-  // Handle Add Node command
   useEffect(() => {
     if (!nodeToAdd) return;
     addNode(nodeToAdd);
     clearNodeRequest();
   }, [nodeToAdd, addNode, clearNodeRequest]);
+
+  /* -------------------------------------------------- */
+  /* Selection + keyboard                               */
+  /* -------------------------------------------------- */
 
   const onNodeClick = useCallback(
     (_: unknown, node: Node<ServiceNodeData>) => {
@@ -140,30 +187,6 @@ export function FlowCanvas() {
     setMobilePanelOpen(false);
   }, [setSelectedNode, setMobilePanelOpen]);
 
-  // Delete / Backspace
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!selectedNodeId) return;
-
-      if (e.key === "Delete" || e.key === "Backspace") {
-        setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
-        setEdges((eds) =>
-          eds.filter(
-            (e) =>
-              e.source !== selectedNodeId &&
-              e.target !== selectedNodeId
-          )
-        );
-        setSelectedNode(null);
-        setMobilePanelOpen(false);
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedNodeId, setNodes, setEdges, setSelectedNode, setMobilePanelOpen]);
-
-  // Keyboard shortcuts: S / D / F
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (
@@ -182,11 +205,29 @@ export function FlowCanvas() {
           )
           ?.click();
       }
+
+      if (
+        selectedNodeId &&
+        (e.key === "Delete" || e.key === "Backspace")
+      ) {
+        setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
+        setEdges((eds) =>
+          eds.filter(
+            (e) =>
+              e.source !== selectedNodeId &&
+              e.target !== selectedNodeId
+          )
+        );
+        setSelectedNode(null);
+        setMobilePanelOpen(false);
+      }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [addNode]);
+  }, [addNode, selectedNodeId, setNodes, setEdges, setSelectedNode, setMobilePanelOpen]);
+
+  /* -------------------------------------------------- */
 
   if (!selectedAppId) {
     return (
@@ -218,11 +259,18 @@ export function FlowCanvas() {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        connectionLineType={ConnectionLineType.SmoothStep}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         fitView
+        connectionLineStyle={{
+        stroke: "hsl(var(--foreground))",
+        strokeWidth: 2,
+}}
+
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -231,6 +279,7 @@ export function FlowCanvas() {
         />
         <Controls />
       </ReactFlow>
+      <KeyboardHints />
 
       {selectedNode && (
         <div className="hidden md:block absolute right-0 top-0 h-full w-64 border-l bg-background">

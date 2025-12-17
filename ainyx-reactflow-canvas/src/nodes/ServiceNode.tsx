@@ -9,16 +9,18 @@ export function ServiceNode(props: NodeProps) {
   return (
     <div
       className={[
-        "min-w-40 rounded-lg border bg-background px-3 py-2 shadow-sm",
+        "min-w-40 rounded-lg border bg-background px-3 py-2.5",
+        "shadow-sm transition-shadow",
         selected
-          ? "border-primary ring-1 ring-primary"
+          ? "border-primary shadow-md ring-1 ring-primary/40"
           : "border-border",
       ].join(" ")}
     >
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <div className="truncate text-sm font-medium">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <div className="truncate text-sm font-medium leading-tight">
           {data.label}
         </div>
+
         <Badge
           variant={
             data.status === "Down"
@@ -27,7 +29,7 @@ export function ServiceNode(props: NodeProps) {
               ? "secondary"
               : "default"
           }
-          className="text-[10px]"
+          className="h-5 px-1.5 text-[10px] font-medium"
         >
           {data.status}
         </Badge>
