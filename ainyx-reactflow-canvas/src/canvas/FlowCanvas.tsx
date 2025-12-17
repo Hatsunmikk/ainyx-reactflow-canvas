@@ -14,6 +14,10 @@ import { useGraph } from "@/hooks/useGraph";
 import { NodeInspector } from "@/inspector/NodeInspector";
 import type { ServiceNodeData } from "@/types/node";
 
+import { ServiceNode } from "@/nodes/ServiceNode";
+import { DatabaseNode } from "@/nodes/DatabaseNode";
+import type { NodeTypes } from "@xyflow/react";
+
 export function FlowCanvas() {
   const selectedAppId = useUIStore((s) => s.selectedAppId);
   const selectedNodeId = useUIStore((s) => s.selectedNodeId);
@@ -31,6 +35,12 @@ export function FlowCanvas() {
     useNodesState<Node<ServiceNodeData>>([]);
   const [edges, setEdges, onEdgesChange] =
     useEdgesState<Edge>([]);
+
+  // ✅ REGISTER NODE TYPES (MUST BE HERE)
+  const nodeTypes: NodeTypes = {
+    service: ServiceNode,
+    database: DatabaseNode,
+  };
 
   // Normalize incoming graph data
   useEffect(() => {
@@ -108,10 +118,9 @@ export function FlowCanvas() {
     [setNodes, setSelectedNode]
   );
 
-  // Handle Add Node command from TopBar
+  // Handle Add Node command
   useEffect(() => {
     if (!nodeToAdd) return;
-
     addNode(nodeToAdd);
     clearNodeRequest();
   }, [nodeToAdd, addNode, clearNodeRequest]);
@@ -154,23 +163,17 @@ export function FlowCanvas() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedNodeId, setNodes, setEdges, setSelectedNode, setMobilePanelOpen]);
 
-  // 🔑 Keyboard shortcuts: S / D / F
+  // Keyboard shortcuts: S / D / F
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement
-      ) {
+      )
         return;
-      }
 
-      if (e.key.toLowerCase() === "s") {
-        addNode("service");
-      }
-
-      if (e.key.toLowerCase() === "d") {
-        addNode("database");
-      }
+      if (e.key.toLowerCase() === "s") addNode("service");
+      if (e.key.toLowerCase() === "d") addNode("database");
 
       if (e.key.toLowerCase() === "f") {
         document
@@ -214,6 +217,7 @@ export function FlowCanvas() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
@@ -228,7 +232,6 @@ export function FlowCanvas() {
         <Controls />
       </ReactFlow>
 
-      {/* Desktop inspector */}
       {selectedNode && (
         <div className="hidden md:block absolute right-0 top-0 h-full w-64 border-l bg-background">
           <NodeInspector
@@ -238,7 +241,6 @@ export function FlowCanvas() {
         </div>
       )}
 
-      {/* Mobile drawer */}
       {selectedNode && isMobilePanelOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
