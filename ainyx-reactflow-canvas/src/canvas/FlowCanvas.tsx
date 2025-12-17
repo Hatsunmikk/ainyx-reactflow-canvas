@@ -29,16 +29,20 @@ export function FlowCanvas() {
   const [edges, setEdges, onEdgesChange] =
     useEdgesState<Edge>([]);
 
-  // Normalize incoming graph data
+  // ✅ Normalize incoming graph data (includes node.type + data.type)
   useEffect(() => {
     if (!data) return;
 
     const typedNodes: Node<ServiceNodeData>[] = data.nodes.map((n) => {
       const raw = n.data as Partial<ServiceNodeData>;
+      const nodeType =
+        raw.type === "database" ? "database" : "service";
 
       return {
         ...n,
+        type: nodeType, // ReactFlow renderer
         data: {
+          type: nodeType, // domain data
           label: typeof raw.label === "string" ? raw.label : "Service",
           description:
             typeof raw.description === "string" ? raw.description : "",
@@ -89,7 +93,7 @@ export function FlowCanvas() {
     setMobilePanelOpen(false);
   }, [setSelectedNode, setMobilePanelOpen]);
 
-  // Delete / Backspace
+  // Delete / Backspace support
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (!selectedNodeId) return;
