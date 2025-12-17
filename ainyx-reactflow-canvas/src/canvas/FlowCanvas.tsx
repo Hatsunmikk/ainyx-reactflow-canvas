@@ -76,6 +76,30 @@ export function FlowCanvas() {
     );
   };
 
+  const addNode = (type: "service" | "database") => {
+  const id = crypto.randomUUID();
+
+  setNodes((nds) => [
+    ...nds,
+    {
+      id,
+      type, // ReactFlow renderer
+      position: {
+        x: 200 + Math.random() * 120,
+        y: 200 + Math.random() * 120,
+      },
+      data: {
+        type,
+        label: type === "service" ? "New Service" : "New Database",
+        description: "",
+        status: "Healthy",
+        load: 0,
+      },
+    },
+  ]);
+};
+
+
   const onNodeClick = useCallback(
     (_: unknown, node: Node<ServiceNodeData>) => {
       setSelectedNode(node.id);
